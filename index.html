@@ -142,6 +142,22 @@ function showLessComments(videoId) {
         alert('Error adding like!');
       }
     }
+
+    // Periodically fetch likes and comments
+function startAutoRefresh(videoId) {
+  setInterval(() => {
+    updateLikes(videoId);
+    loadComments(videoId);
+  }, 5000); // Refresh every 5 seconds
+}
+
+// Function to update the like count
+async function updateLikes(videoId) {
+  const response = await fetch(`https://vbscom.onrender.com/api/likes/${videoId}`);
+  const data = await response.json();
+  document.getElementById(`like-count-${videoId}`).textContent = `${data.likes} Likes`;
+}
+
   </script>
 </head>
 <body>
