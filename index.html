@@ -100,18 +100,31 @@
     }
 
     // Periodically refresh likes and comments
-    function startAutoRefresh(videoId) {
-      setInterval(() => {
-        updateLikes(videoId);
-        loadComments(videoId);
-      }, 5000); // Refresh every 5 seconds
+   function startAutoRefresh(videoId) {
+  setInterval(async () => {
+    try {
+      await updateLikes(videoId);
+      await loadComments(videoId);
+    } catch (error) {
+      console.error('Error during auto-refresh:', error);
     }
+  }, 5000); // Refresh every 5 seconds
+}
+
 
     async function updateLikes(videoId) {
-      const response = await fetch(`https://vbscom.onrender.com/api/likes/${videoId}`);
-      const data = await response.json();
-      document.getElementById(`like-count-${videoId}`).textContent = `${data.likes} Likes`;
+  try {
+    const response = await fetch(`https://vbscom.onrender.com/api/likes/${videoId}`);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} ${response.statusText}`);
     }
+    const data = await response.json();
+    document.getElementById(`like-count-${videoId}`).textContent = `${data.likes} Likes`;
+  } catch (error) {
+    console.error('Failed to fetch likes:', error);
+  }
+}
+
   </script>
 </head>
 <body>
