@@ -5,33 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Interactive Video Page</title>
   <style>
-  .comments-section {
-    max-height: 300px;
-    overflow: hidden;
-    margin-bottom: 10px;
-  }
+    .comments-section {
+      max-height: 300px; /* Adjust as needed */
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
 
-  button {
-    margin: 5px;
-    padding: 8px 12px;
-    border: none;
-    background-color: #007bff;
-    color: white;
-    cursor: pointer;
-    border-radius: 5px;
-  }
+    button {
+      margin: 5px;
+      padding: 8px 12px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      border-radius: 5px;
+    }
 
-  button:hover {
-    background-color: #0056b3;
-  }
+    button:hover {
+      background-color: #0056b3;
+    }
 
-  button:focus {
-    outline: none;
-  }
-</style>
-
+    button:focus {
+      outline: none;
+    }
+  </style>
   <script>
-    // Save username after user input
+    // Save username locally
     function saveUsername() {
       const username = document.getElementById('username-input').value;
       if (username.trim()) {
@@ -43,91 +42,48 @@
       }
     }
 
-    // Function to submit a comment
-    async function submitComment(videoId) {
-      const username = localStorage.getItem('username'); // Get stored username
-      const commentInput = document.getElementById(`comment-input-${videoId}`);
-      const comment = commentInput.value;
-
-      if (comment.trim()) {
-        const response = await fetch('https://vbscom.onrender.com/api/comments', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ videoId, username, comment })
-        });
-
-        if (response.ok) {
-          commentInput.value = '';
-          loadComments(videoId); // Refresh comments
-        } else {
-          alert('Error submitting comment!');
-        }
-      } else {
-        alert('Please write a comment before submitting.');
-      }
-    }
-
-    // Function to load comments for a video
-   /* async function loadComments(videoId) {
+    // Load and display comments with new ones at the top
+    async function loadComments(videoId) {
       const response = await fetch(`https://vbscom.onrender.com/api/comments/${videoId}`);
       const data = await response.json();
 
       const commentsContainer = document.getElementById(`comments-${videoId}`);
-      commentsContainer.innerHTML = ''; // Clear existing comments
+      commentsContainer.dataset.fullComments = JSON.stringify(data.comments);
+      displayLimitedComments(videoId, 10); // Show first 10 comments initially
+    }
 
-      data.comments.forEach(({ username, comment }) => {
+    // Display limited comments
+    function displayLimitedComments(videoId, limit) {
+      const commentsContainer = document.getElementById(`comments-${videoId}`);
+      const allComments = JSON.parse(commentsContainer.dataset.fullComments);
+
+      const reversedComments = allComments.slice().reverse(); // New comments first
+      commentsContainer.innerHTML = '';
+
+      reversedComments.slice(0, limit).forEach(({ username, comment }) => {
         const p = document.createElement('p');
         p.textContent = `${username}: ${comment}`;
         commentsContainer.appendChild(p);
       });
-    }*/
-  // Function to load and display comments
-async function loadComments(videoId) {
-  const response = await fetch(`https://vbscom.onrender.com/api/comments/${videoId}`);
-  const data = await response.json();
 
-  const commentsContainer = document.getElementById(`comments-${videoId}`);
-  commentsContainer.dataset.fullComments = JSON.stringify(data.comments); // Store all comments
-  displayLimitedComments(videoId, 10); // Initially display the first 10 comments
-}
+      document.getElementById(`read-more-button-${videoId}`).style.display =
+        reversedComments.length > limit ? 'block' : 'none';
+      document.getElementById(`show-less-button-${videoId}`).style.display = limit > 10 ? 'block' : 'none';
+    }
 
-// Function to display comments, with new comments at the top
-function displayLimitedComments(videoId, limit) {
-  const commentsContainer = document.getElementById(`comments-${videoId}`);
-  const allComments = JSON.parse(commentsContainer.dataset.fullComments);
+    // Show more comments
+    function showMoreComments(videoId) {
+      const commentsContainer = document.getElementById(`comments-${videoId}`);
+      const allComments = JSON.parse(commentsContainer.dataset.fullComments);
+      displayLimitedComments(videoId, allComments.length); // Show all comments
+    }
 
-  // Reverse the comments to show the newest ones at the top
-  const reversedComments = allComments.slice().reverse();
-  commentsContainer.innerHTML = ''; // Clear existing comments
+    // Show less (collapse) comments
+    function showLessComments(videoId) {
+      displayLimitedComments(videoId, 10); // Show first 10 comments
+    }
 
-  reversedComments.slice(0, limit).forEach(({ username, comment }) => {
-    const p = document.createElement('p');
-    p.textContent = `${username}: ${comment}`;
-    commentsContainer.appendChild(p);
-  });
-
-  // Show or hide buttons based on comment count
-  document.getElementById(`read-more-button-${videoId}`).style.display =
-    reversedComments.length > limit ? 'block' : 'none';
-  document.getElementById(`show-less-button-${videoId}`).style.display = limit > 10 ? 'block' : 'none';
-}
-
-// Function to show more comments
-function showMoreComments(videoId) {
-  const commentsContainer = document.getElementById(`comments-${videoId}`);
-  const allComments = JSON.parse(commentsContainer.dataset.fullComments);
-
-  displayLimitedComments(videoId, allComments.length); // Display all comments
-}
-
-// Function to show less (collapse) comments
-function showLessComments(videoId) {
-  displayLimitedComments(videoId, 10); // Display the first 10 comments
-}
-
-
-
-    // Function to add a like
+    // Add a like
     async function addLike(videoId) {
       const response = await fetch('https://vbscom.onrender.com/api/likes', {
         method: 'POST',
@@ -143,21 +99,19 @@ function showLessComments(videoId) {
       }
     }
 
-    // Periodically fetch likes and comments
-function startAutoRefresh(videoId) {
-  setInterval(() => {
-    updateLikes(videoId);
-    loadComments(videoId);
-  }, 5000); // Refresh every 5 seconds
-}
+    // Periodically refresh likes and comments
+    function startAutoRefresh(videoId) {
+      setInterval(() => {
+        updateLikes(videoId);
+        loadComments(videoId);
+      }, 5000); // Refresh every 5 seconds
+    }
 
-// Function to update the like count
-async function updateLikes(videoId) {
-  const response = await fetch(`https://vbscom.onrender.com/api/likes/${videoId}`);
-  const data = await response.json();
-  document.getElementById(`like-count-${videoId}`).textContent = `${data.likes} Likes`;
-}
-
+    async function updateLikes(videoId) {
+      const response = await fetch(`https://vbscom.onrender.com/api/likes/${videoId}`);
+      const data = await response.json();
+      document.getElementById(`like-count-${videoId}`).textContent = `${data.likes} Likes`;
+    }
   </script>
 </head>
 <body>
@@ -170,7 +124,6 @@ async function updateLikes(videoId) {
 
   <!-- Videos Section -->
   <div id="videos-section" style="display: none;">
-    <!-- Example Video -->
     <div id="video-1">
       <h3>Video Title 1</h3>
       <video controls>
@@ -178,18 +131,17 @@ async function updateLikes(videoId) {
       </video>
       <div class="like-comment-section">
         <button onclick="addLike('video-1')">👍 Like</button>
-        <span id="like-count-video-1">0 Likes</span><br>
-        <textarea id="comment-input-video-1" placeholder="Write a comment..."></textarea>
-        <button onclick="submitComment('video-1')">Submit</button> <br>
-       <div class="comments" id="comments-video-1"></div>
-        <div class="comments-section" id="comments-video-1">
-  <!-- Comments will load dynamically here -->
-</div>
-<button id="read-more-button-video-1" onclick="showMoreComments('video-1')">Read More</button>
-<button id="show-less-button-video-1" onclick="showLessComments('video-1')" style="display: none;">Show Less</button>
-
+        <span id="like-count-video-1">0 Likes</span>
+        <div class="comments-section" id="comments-video-1"></div>
+        <button id="read-more-button-video-1" onclick="showMoreComments('video-1')">Read More</button>
+        <button id="show-less-button-video-1" onclick="showLessComments('video-1')" style="display: none;">Show Less</button>
       </div>
     </div>
   </div>
+
+  <script>
+    // Start auto-refresh for video-1 (replace with dynamic video IDs for multiple videos)
+    startAutoRefresh('video-1');
+  </script>
 </body>
 </html>
