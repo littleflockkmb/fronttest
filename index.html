@@ -24,7 +24,7 @@
       const comment = commentInput.value;
 
       if (comment.trim()) {
-        const response = await fetch('/api/comments', {
+        const response = await fetch('https://vbscom.onrender.com/api/comments', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ videoId, username, comment })
@@ -43,7 +43,7 @@
 
     // Function to load comments for a video
     async function loadComments(videoId) {
-      const response = await fetch(`/api/comments/${videoId}`);
+      const response = await fetch(`https://vbscom.onrender.com/api/comments/${videoId}`);
       const data = await response.json();
 
       const commentsContainer = document.getElementById(`comments-${videoId}`);
@@ -58,7 +58,7 @@
 
     // Function to add a like
     async function addLike(videoId) {
-      const response = await fetch('/api/likes', {
+      const response = await fetch('https://vbscom.onrender.com/api/likes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ videoId })
