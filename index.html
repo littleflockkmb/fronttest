@@ -4,6 +4,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Interactive Video Page</title>
+  <style>
+  .comments-section {
+    max-height: 300px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  button {
+    margin: 5px;
+    padding: 8px 12px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+
+  button:hover {
+    background-color: #0056b3;
+  }
+
+  button:focus {
+    outline: none;
+  }
+</style>
+
   <script>
     // Save username after user input
     function saveUsername() {
