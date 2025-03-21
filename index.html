@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Page</title>
+  <script>
+    // Save the username locally after user input
+    function saveUsername() {
+      const username = document.getElementById('username-input').value;
+      if (username.trim()) {
+        localStorage.setItem('username', username); // Save username locally
+        document.getElementById('username-section').style.display = 'none';
+        document.getElementById('videos-section').style.display = 'block';
+      } else {
+        alert('Please enter your name!');
+      }
+    }
+
+    // Function to submit a comment
+    async function submitComment(videoId) {
+      const username = localStorage.getItem('username'); // Get stored username
+      const commentInput = document.getElementById(`comment-input-${videoId}`);
+      const comment = commentInput.value;
+
+      if (comment.trim()) {
+        const response = await fetch('/api/comments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ videoId, username, comment })
+        });
+
+        if (response.ok) {
+          commentInput.value = '';
+          loadComments(videoId); // Refresh comments
+        } else {
+          alert('Error submitting comment!');
+        }
+      } else {
+        alert('Please write a comment before submitting.');
+      }
+    }
+
+    // Function to load comments for a video
+    async function loadComments(videoId) {
+      const response = await fetch(`/api/comments/${videoId}`);
+      const data = await response.json();
+
+      const commentsContainer = document.getElementById(`comments-${videoId}`);
+      commentsContainer.innerHTML = ''; // Clear existing comments
+
+      data.comments.forEach(({ username, comment }) => {
+        const p = document.createElement('p');
+        p.textContent = `${username}: ${comment}`;
+        commentsContainer.appendChild(p);
+      });
+    }
+
+    // Function to add a like
+    async function addLike(videoId) {
+      const response = await fetch('/api/likes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoId })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        document.getElementById(`like-count-${videoId}`).textContent = `${data.likes} Likes`;
+      } else {
+        alert('Error adding like!');
+      }
+    }
+  </script>
+</head>
+<body>
+  <!-- Username Input Section -->
+  <div id="username-section">
+    <h2>Welcome! Please enter your name:</h2>
+    <input type="text" id="username-input" placeholder="Your Name">
+    <button onclick="saveUsername()">Continue</button>
+  </div>
+
+  <!-- Videos Section -->
+  <div id="videos-section" style="display: none;">
+    <!-- Example Video -->
+    <div id="video-1">
+      <h3>Video Title 1</h3>
+      <video controls>
+        <source src="video1.mp4" type="video/mp4" />
+      </video>
+      <div class="like-comment-section">
+        <button onclick="addLike('video-1')">👍 Like</button>
+        <span id="like-count-video-1">0 Likes</span>
+        <div class="comments" id="comments-video-1"></div>
+        <textarea id="comment-input-video-1" placeholder="Write a comment..."></textarea>
+        <button onclick="submitComment('video-1')">Submit</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
