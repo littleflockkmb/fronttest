@@ -345,18 +345,37 @@ async function loadComments(videoId) {
   }
 
   // Function to update the like count
-  async function updateLikes(videoId) {
-    try {
-      const response = await fetch(`https://vbscom.onrender.com/api/likes/${videoId}`);
-      if (!response.ok) {
-        throw new Error(`Error fetching likes: ${response.status} ${response.statusText}`);
-      }
-      const data = await response.json();
-      document.getElementById(`like-count-${videoId}`).textContent = `${data.likes} Likes`;
-    } catch (error) {
-      console.error('Failed to update likes:', error);
+async function updateLikes(videoId) {
+  try {
+    // Fetch the like count from the backend
+    const response = await fetch(`https://vbscom.onrender.com/api/likes/${videoId}`);
+
+    if (!response.ok) {
+      // Provide specific error messages for debugging
+      throw new Error(`Error fetching likes: HTTP ${response.status} - ${response.statusText}`);
     }
+
+    // Parse the response data as JSON
+    const data = await response.json();
+
+    // Check if the required "likes" field exists in the response
+    if (data && typeof data.likes === 'number') {
+      // Update the likes count in the DOM
+      const likeCountElement = document.getElementById(`like-count-${videoId}`);
+      if (likeCountElement) {
+        likeCountElement.textContent = `${data.likes} Likes`;
+      } else {
+        console.error(`Element with ID "like-count-${videoId}" not found.`);
+      }
+    } else {
+      console.error('Response format invalid: "likes" field not found or not a number.');
+    }
+  } catch (error) {
+    // Log the error details to help with debugging
+    console.error('Failed to update likes:', error);
   }
+}
+
 
   // Start periodic updates when the page loads
   window.onload = () => {
